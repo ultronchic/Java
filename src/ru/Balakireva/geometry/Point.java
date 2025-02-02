@@ -15,6 +15,7 @@ public class Point {
         this.x = x;
         this.y = y;
     }
+    
     // Метод для сдвига точки на заданные значения dx и dy
     public void shift(double dx, double dy) {
         this.x += dx; // Сдвигаем по оси X
@@ -25,10 +26,11 @@ public class Point {
         this.x += deltaX;
         this.y += deltaY;
     }
-    // Геттеры для координат
+    // Геттеры для координат  Метод для получения координаты X
     public int getX() {
         return x;
     }
+    //Метод для получения координаты Y
     public int getY() {
         return y;
     }

@@ -3,6 +3,7 @@ package ru.Balakireva.others;
 import ru.Balakireva.people.Employee;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 class Department {
@@ -25,19 +26,27 @@ class Department {
 
     public void setManager(Employee manager) {
         if (manager != null && manager.getDepartment() == this) {
+            if (this.manager != null) {
+                // Убираем предыдущего менеджера из списка сотрудников, если он есть
+                employees.remove(this.manager);
+            }
             this.manager = manager;
-            addEmployee(manager); // Добавляем менеджера в список сотрудников
+            addEmployee(manager); // Добавляем нового менеджера в список сотрудников
         }
     }
 
     public void addEmployee(Employee employee) {
         if (employee != null && employee.getDepartment() == this) {
-            employees.add(employee);
+            // Учтем, что менеджер не должен дублироваться в списке сотрудников
+            if (!employees.contains(employee)) {
+                employees.add(employee);
+            }
         }
     }
 
+    // Возвращаем копию списка сотрудников
     public List<Employee> getEmployees() {
-        return employees;
+        return new ArrayList<>(employees); 
     }
 
     @Override

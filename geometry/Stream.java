@@ -64,6 +64,7 @@ public class Main {
         // Создание Polyline с использованием Stream.of
         Polyline polyline = new Polyline(
                 Stream.of(pointsArray)
+                        .filter(Objects::notNull) // фильтруем не нулевые значения
                         .distinct() // Убираем дубликаты
                         .map(point -> new Point(point.getX(), Math.abs(point.getY()))) // Делаем Y положительными
                         .sorted(Comparator.comparingInt(Point::getX)) // Сортируем по X

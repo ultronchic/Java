@@ -1,4 +1,3 @@
-// test to Cache.java
 package ru.Balakireva.others;
 
 import org.junit.jupiter.api.BeforeEach;

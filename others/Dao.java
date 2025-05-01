@@ -30,26 +30,23 @@ public class DAO {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при извлечении данных из таблицы '" + tableName + "': " + e.getMessage(), e);
+            throw new DataAccessException("Ошибка при извлечении данных из таблицы '" + tableName + "': " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new DataMappingException("Ошибка при маппинге данных на объект класса '" + clz.getSimpleName() + "': " + e.getMessage(), e);
         }
 
         return resultList;
     }
 
-    private <T> T mapRowToObject(ResultSet resultSet, Class<T> clz) {
-        try {
-            T obj = clz.getDeclaredConstructor().newInstance(); // Создаем новый экземпляр класса
+    private <T> T mapRowToObject(ResultSet resultSet, Class<T> clz) throws Exception {
+        T obj = clz.getDeclaredConstructor().newInstance(); // Создаем новый экземпляр класса
 
-            for (Field field : clz.getDeclaredFields()) {
-                field.setAccessible(true); // Игнорируем инкапсуляцию
-                Object value = resultSet.getObject(field.getName()); // Получаем значение из ResultSet по имени поля
-                field.set(obj, value); // Устанавливаем значение поля
-            }
-
-            return obj;
-
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при маппинге строки результата на объект класса '" + clz.getSimpleName() + "': " + e.getMessage(), e);
+        for (Field field : clz.getDeclaredFields()) {
+            field.setAccessible(true); // Игнорируем инкапсуляцию
+            Object value = resultSet.getObject(field.getName()); // Получаем значение из ResultSet по имени поля
+            field.set(obj, value); // Устанавливаем значение поля
         }
+
+        return obj;
     }
 }

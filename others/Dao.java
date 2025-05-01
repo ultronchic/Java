@@ -16,11 +16,8 @@ public class DAO {
 
     public <T> List<T> findAll(Class<T> clz) {
         List<T> resultList = new ArrayList<>();
+        String tableName = clz.getSimpleName().toLowerCase(); // Предполагаем, что имя таблицы соответствует имени класса в нижнем регистре
 
-        // Определяем имя таблицы на основе имени класса
-        String tableName = clz.getSimpleName().toLowerCase() + "s"; // Например, "users"
-
-        // SQL-запрос для выборки всех записей
         String sql = "SELECT * FROM " + tableName;
 
         try (Connection connection = DriverManager.getConnection(url, user, password);
@@ -28,34 +25,31 @@ public class DAO {
              ResultSet resultSet = statement.executeQuery(sql)) {
 
             while (resultSet.next()) {
-                // Создаем объект типа T на основе результата запроса
-                T obj = createObjectFromResultSet(resultSet, clz);
+                T obj = mapRowToObject(resultSet, clz);
                 resultList.add(obj);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            // Обработка исключений
+            throw new RuntimeException("Ошибка при извлечении данных из таблицы '" + tableName + "': " + e.getMessage(), e);
         }
 
         return resultList;
     }
 
-    private <T> T createObjectFromResultSet(ResultSet resultSet, Class<T> clz) throws SQLException {
+    private <T> T mapRowToObject(ResultSet resultSet, Class<T> clz) {
         try {
-            if (clz == User.class) { // Пример для класса User
-                int id = resultSet.getInt("id");
-                String name = resultSet.getString("name");
-                String email = resultSet.getString("email");
-                return clz.cast(new User(id, name, email));
+            T obj = clz.getDeclaredConstructor().newInstance(); // Создаем новый экземпляр класса
+
+            for (Field field : clz.getDeclaredFields()) {
+                field.setAccessible(true); // Игнорируем инкапсуляцию
+                Object value = resultSet.getObject(field.getName()); // Получаем значение из ResultSet по имени поля
+                field.set(obj, value); // Устанавливаем значение поля
             }
-            // Добавьте дополнительные условия для других классов по мере необходимости
 
-            throw new IllegalArgumentException("Неизвестный класс: " + clz);
+            return obj;
 
-        } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
-            throw new SQLException("Ошибка создания объекта", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при маппинге строки результата на объект класса '" + clz.getSimpleName() + "': " + e.getMessage(), e);
         }
     }
 }

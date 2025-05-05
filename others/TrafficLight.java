@@ -1,17 +1,12 @@
-// TrafficLight.java
-package ru.Balakireva.others;
-
-import org.springframework.beans.factory.annotation.Autowired;
+package edu.mfti;
 import org.springframework.stereotype.Component;
-
 @Component
 public class TrafficLight {
 
     private TrafficLightState currentState;
 
-    @Autowired
-    public TrafficLight(RedState redState) {
-        this.currentState = redState; // Начинаем с красного состояния.
+    public TrafficLight() {
+        this.currentState = new RedState(); // Начинаем с красного состояния.
     }
 
     public void next() {

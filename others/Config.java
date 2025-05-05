@@ -41,14 +41,54 @@ public class AppConfig {
     }
 }
 // AppConfig.java задача 9.2.3
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.ArrayList;
+import java.util.List;
+
+    @Configuration
+    public class AppConfig {
 
         @Bean
-        public Review bestReview(Review review1, Review review2, Review review3) {
-            return getBestReview(review1, review2, review3);
+        public Integer min() {
+            return 1; // минимальная оценка
         }
 
-        private Review getBestReview(Review... reviews) {
-            Review best = reviews[0];
+        @Bean
+        public Integer max() {
+            return 5; // максимальная оценка
+        }
+
+        @Bean
+        public RandomIntGenerator randomIntGenerator(Integer min, Integer max) {
+            return new RandomIntGenerator(min, max);
+        }
+
+        @Bean
+        public List<Review> reviews(RandomIntGenerator randomIntGenerator) {
+            List<Review> reviews = new ArrayList<>();
+            reviews.add(new Review("Очень хорошо", 4));
+            reviews.add(new Review("Сойдет", 3));
+
+            // Добавляем случайный отзыв
+            int randomRating = randomIntGenerator.getNextRandom();
+            reviews.add(new Review("Сложно сказать", randomRating));
+
+            return reviews;
+        }
+
+        @Bean
+        public Review bestReview(List<Review> reviews) {
+            return getBestReview(reviews);
+        }
+
+        private Review getBestReview(List<Review> reviews) {
+            if (reviews.isEmpty()) {
+                throw new IllegalArgumentException("Нет доступных отзывов для оценки.");
+            }
+
+            Review best = reviews.get(0);
             for (Review review : reviews) {
                 if (review.getRating() > best.getRating()) {
                     best = review;
@@ -82,6 +122,8 @@ public class AppConfig {
     }
 // AppConfig.java 9.2.6 Стриминг платформа.
 package ru.Balakireva.config;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ru.Balakireva.stream.DataReader;
@@ -90,67 +132,52 @@ import ru.Balakireva.stream.FileDataReader;
 import ru.Balakireva.stream.FileDataWriter;
 
 // Конфигурационный класс Spring для настройки бинов.
+@Configuration
+public class AppConfig {
+
+    @Value("${input.file.name}")
+    private String inputFileName;
+
+    @Value("${output.file.name}")
+    private String outputFileName;
+
     @Bean
     public DataReader fileDataReader() {
-        return new FileDataReader();
+        FileDataReader reader = new FileDataReader();
+        reader.setInputFileName(inputFileName);
+        return reader;
     }
+
     @Bean
     public DataWriter fileDataWriter() {
-        return new FileDataWriter();
+        FileDataWriter writer = new FileDataWriter();
+        writer.setOutputFileName(outputFileName);
+        return writer;
     }
-// AppConfig.java 9.2.7 Настройка светофора.
-package ru.Balakireva.others;
+
+    @Bean
+    public StreamProcessor streamProcessor(DataReader dataReader, DataWriter dataWriter,
+                                           ToUpperCaseAction toUpperCaseAction,
+                                           RemoveAAction removeAAction,
+                                           FilterLongWordsAction filterLongWordsAction) {
+        return new StreamProcessor(dataReader, dataWriter, toUpperCaseAction, removeAAction, filterLongWordsAction);
+    }
+}
+
+// задача 9.2.8
+package edu.mfti;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-    @Bean
-    public RedState redState() {
-        return new RedState();
-    }
-
-    @Bean
-    public YellowState yellowState() {
-        return new YellowState();
-    }
-
-    @Bean
-    public GreenState greenState() {
-        return new GreenState();
-    }
+@Configuration
+public class AppConfig {
 
     @Bean
     public TrafficLight trafficLight() {
-        return new TrafficLight(redState());
+        return new TrafficLight(); // Создаем светофор без состояний как бинов.
     }
-
-// задача 9.2.8
-
-    @Bean
-    public Stock orclStock() {
-        return new Stock("ORCL", 75);
-    }
-
-    @Bean
-    public Stock tslaStock() {
-        return new Stock("TSLA", 696);
-    }
-
-    @Bean
-    public Printer printer() {
-        return new Printer();
-    }
-
-    @Bean
-    public Bot bot() {
-        return new Bot();
-    }
-
-    @Bean
-    public void registerObservers(Stock orclStock, Stock tslaStock, Printer printer, Bot bot) {
-        orclStock.addObserver(printer);
-        orclStock.addObserver(bot);
-        tslaStock.addObserver(printer);
-    }
+}
 //Задача 9.3.1
     @Bean
     public Person person() {

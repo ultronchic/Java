@@ -1,5 +1,4 @@
-// TrafficLightState.java
-package ru.Balakireva.others;
+package edu.mfti;
 
 public interface TrafficLightState {
     void make();

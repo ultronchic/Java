@@ -724,26 +724,46 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 /* 9.2.3 Лучший отзыв. Создайте бин типа Отзыв, который будет возвращать тот из бинов,
 созданных в задаче 9.2.2, который имеет самую высокую оценку на момент запроса бина.
 */
-            // Получаем лучший отзыв и выводим его на экран
-            Review bestReview = context.getBean("bestReview", Review.class);
-            System.out.println("Лучший отзыв: " + bestReview);
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-            // Если нужно получить еще одну случайную оценку для нового отзыва:
-            RandomIntGenerator generator = context.getBean(RandomIntGenerator.class);
+            public class MainApp {
 
-            try {
-                int anotherRandomRating = generator.getNextRandom();
-                Review anotherReview = new Review("Новый отзыв", anotherRandomRating);
-                System.out.println(anotherReview);
+                public static void main(String[] args) {
 
-                // Получаем лучший отзыв снова после добавления нового отзыва
-                bestReview = context.getBean("bestReview", Review.class);
-                System.out.println("Лучший отзыв после добавления нового: " + bestReview);
+                    ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 
-            } catch (IllegalStateException e) {
-                System.out.println(e.getMessage());
+                    // Получаем отзывы из контекста Spring
+                    List<Review> reviews = context.getBean("reviews", List.class);
+
+                    // Выводим отзывы на экран
+                    for (Review review : reviews) {
+                        System.out.println(review);
+                    }
+
+                    // Получаем лучший отзыв и выводим его на экран
+                    Review bestReview = context.getBean("bestReview", Review.class);
+                    System.out.println("Лучший отзыв: " + bestReview);
+
+                    // Если нужно получить еще одну случайную оценку для нового отзыва:
+                    RandomIntGenerator generator = context.getBean(RandomIntGenerator.class);
+
+                    try {
+                        int anotherRandomRating = generator.getNextRandom();
+                        Review anotherReview = new Review("Новый отзыв", anotherRandomRating);
+                        System.out.println(anotherReview);
+
+                        // Добавляем новый отзыв в список и пересчитываем лучший отзыв
+                        reviews.add(anotherReview);
+                        bestReview = context.getBean("bestReview", List.class); // Обновляем лучший отзыв с учетом нового отзыва
+                        System.out.println("Лучший отзыв после добавления нового: " + bestReview);
+
+                    } catch (IllegalStateException e) {
+                        System.out.println(e.getMessage());
+                    }
+
+                }
             }
-
 // MainApp.java 9.2.4
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -823,33 +843,36 @@ package ru.Balakireva.app;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertiesPropertySource;
 import ru.Balakireva.config.AppConfig;
-import ru.Balakireva.stream.FileDataReader;
-import ru.Balakireva.stream.FileDataWriter;
 import ru.Balakireva.stream.StreamProcessor;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 // Основной класс приложения.
             public class MainApp {
 
                 public static void main(String[] args) {
-
                     ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 
-                    // Получаем необходимые бины из контекста Spring.
-                    FileDataReader fileDataReader = context.getBean(FileDataReader.class);
-                    FileDataWriter fileDataWriter = context.getBean(FileDataWriter.class);
-                    StreamProcessor streamProcessor = context.getBean(StreamProcessor.class);
-
-                    // Устанавливаем имена файлов.
-                    fileDataReader.setInputFileName("input.txt");
-                    fileDataWriter.setOutputFileName("output.txt");
+                    // Загружаем свойства из файла
+                    ConfigurableEnvironment environment = ((AnnotationConfigApplicationContext) context).getEnvironment();
+                    Properties properties = new Properties();
+                    try {
+                        properties.load(new FileInputStream("application.properties"));
+                        environment.getPropertySources().addFirst(new PropertiesPropertySource("application", properties));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
                     // Запускаем процесс обработки данных.
+                    StreamProcessor streamProcessor = context.getBean(StreamProcessor.class);
                     streamProcessor.process();
                 }
             }
-        }
-    }
 // MainApp.java 9.2.7 Настройка светофора.
 package edu.mfti;
 import org.springframework.context.ApplicationContext;
@@ -898,22 +921,29 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
         }
     }
 //задача 9.2.8
+package edu.mfti;
 
-    public class MainApp {
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-        public static void main(String[] args) {
+// Основной класс приложения.
+            public class MainApp {
 
-            ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+                public static void main(String[] args) {
 
-            // Получаем бины акций из контекста Spring.
-            Stock orcl = context.getBean("orclStock", Stock.class);
-            Stock tsla = context.getBean("tslaStock", Stock.class);
+                    ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 
-            // Изменяем цены акций.
-            orcl.setPrice(68); // Вывод: "Надо покупать ORCL" и "Акция ORCL теперь стоит 68"
-            tsla.setPrice(700); // Вывод: "Акция TSLA теперь стоит 700"
-            orcl.setPrice(75); // Вывод: "Акция ORCL теперь стоит 75"
-        }
+                    // Получаем бин светофора из контекста Spring.
+                    TrafficLight trafficLight = context.getBean(TrafficLight.class);
+
+                    // Тестируем работу светофора.
+                    trafficLight.next(); // вывод: red (красный)
+                    trafficLight.next(); // вывод: yellow (желтый)
+                    trafficLight.next(); // вывод: green (зеленый)
+                    trafficLight.next(); // вывод: yellow (желтый)
+                    trafficLight.next(); // вывод: red (красный)
+                }
+            }
 //Задача 9.3.1
 
 import org.springframework.context.ApplicationContext;

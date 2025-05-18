@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приложение для продажи билетов</title>
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+
+<h1>Доступны к покупке билеты на следующие фильмы</h1>
+
+<table border="1">
+    <tr>
+        <th>Номер билета</th>
+        <th>Название фильма</th>
+        <th>Время начала фильма</th>
+        <th>Дата сеанса фильма</th>
+        <th>Статус билета</th>
+        <th>Действие</th>
+    </tr>
+
+    <tr th:each="ticket : ${availableTickets}">
+        <td th:text="${ticket.ticketNumber}"></td>
+        <td th:text="${ticket.film.title}"></td>
+        <!-- Добавляем время и дату сеанса -->
+        <td th:text="${ticket.moovieTime}"></td>
+        <td th:text="${ticket.moovieDate}"></td>
+        <!-- Статус билета -->
+        <td th:text="${ticket.status}"></td>
+
+        <!-- Действие покупки билета -->
+        <td><form th:action="@{/tickets/purchase}" method="post">
+            <input type="hidden" name="ticketId" th:value="${ticket.id}" />
+            <input type="hidden" name="attemptPurchase" value="true" />
+            <button type="submit">Купить билет</button></form></td>
+        <!-- Действие возврата билета -->
+        <td><form th:action="@{/tickets/purchase}" method="post">
+            <input type="hidden" name="ticketId" th:value="${ticket.id}" />
+            <input type="hidden" name="attemptPurchase" value="true" />
+            <button type="submit">Вернуть билет</button></form></td>
+
+    </tr>
+
+</table>
+<script>
+    // Пример данных, которые могут быть получены с сервера
+    const tickets = [
+        {
+            id: 1,
+            userId: 101,
+            filmId: 202,
+            moovieTime: "14:30",
+            moovieDate: "2023-10-15",
+            ticketNumber: 12345,
+            status: "sold"
+        },
+        // Другие билеты...
+    ];
+
+    const tableBody = document.getElementById('ticketTableBody');
+
+    tickets.forEach(ticket => {
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+            <td>${ticket.id}</td>
+            <td>${ticket.userId}</td>
+            <td>${ticket.filmId}</td>
+            <td>${ticket.moovieTime}</td>
+            <td>${ticket.moovieDate}</td>
+            <td>${ticket.ticketNumber}</td>
+            <td>${ticket.status}</td>
+        `;
+
+        tableBody.appendChild(row);
+    });
+</script>
+
+<div th:if="${success}">
+    <script>showAlert('Билет успешно куплен');</script>
+    <p style="color:green;">Ticket purchased successfully!</p></div>
+
+<div th:if="${error}">
+    <script>showAlert('Ошибка при покупке билета');</script>
+    <p style="color:red;">Error purchasing ticket!</p></div>
+
+</body>
+</html>
